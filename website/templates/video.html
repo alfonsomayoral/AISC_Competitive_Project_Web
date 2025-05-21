@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Video{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="mb-4">Real-Time Emotion Detection</h1>
+
+    <div id="video-container" style="display: none; margin-bottom: 20px;">
+        <img id="video-feed" width="640" height="480" class="border rounded">
+    </div>
+
+    <div>
+        <button id="start-btn" class="btn btn-primary btn-lg">Start Recording</button>
+        <button id="stop-btn" style="display: none;" class="btn btn-danger btn-lg">Stop Recording</button>
+    </div>
+
+    <h2 class="mt-4">Emotion Summary</h2>
+    <div id="results" class="border p-3 rounded bg-light mt-3" style="max-height: 300px; overflow-y: auto;"></div>
+</div>
+
+<script>
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const videoContainer = document.getElementById('video-container');
+    const videoFeed = document.getElementById('video-feed');
+    const results = document.getElementById('results');
+
+    startBtn.addEventListener('click', async () => {
+        const res = await fetch('{{ url_for("video.start_stream") }}');
+        if ((await res.json()).status === 'started') {
+            videoFeed.src = '{{ url_for("video.video_feed") }}';
+            videoContainer.style.display = 'block';
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+        }
+    });
+
+    stopBtn.addEventListener('click', async () => {
+        await fetch('{{ url_for("video.stop_stream") }}');
+        videoFeed.src = "";  // Stop streaming
+        videoContainer.style.display = 'none';
+        startBtn.style.display = 'inline-block';
+        stopBtn.style.display = 'none';
+
+        const res = await fetch('{{ url_for("video.get_report") }}');
+        const data = await res.json();
+        results.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    });
+</script>
+{% endblock %}

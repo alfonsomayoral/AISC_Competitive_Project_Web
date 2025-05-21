@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Reports</h1>
+
+    {% for report in reports %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ report.date }}</h5>
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Emotion</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emotion, count in report.data.items() %}
+                    <tr>
+                        <td>{{ emotion }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button class="btn btn-sm btn-outline-danger float-end" onClick="deleteReport('{{ report.id }}')">
+                Delete
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
