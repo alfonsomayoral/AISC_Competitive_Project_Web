@@ -4,11 +4,12 @@ import cv2
 from ultralytics import YOLO
 from collections import Counter
 from flask_login import login_required, current_user
-import torch                                          
-import json
+import torch  
+import json                                        
 from . import db
 from .models import Report
 from .audio_whisper import AudioTranscriber
+from .report_agent_1_5 import InterviewAnalyzer
 
 video = Blueprint('video', __name__)
 
@@ -28,6 +29,7 @@ for m in (model_face, model_emotion):
 emotion_log = []
 streaming   = False
 audio_transcriber = AudioTranscriber()
+analyzer = InterviewAnalyzer(device='cuda' if torch.cuda.is_available() else 'cpu')
 
 
 @video.route('/video')
@@ -60,8 +62,18 @@ def start_stream():
 @login_required
 def stop_stream():
     global streaming, audio_transcriber
+    streaming = False
     try:
         audio_transcriber.stop()
+        
+        # Generate report after stopping audio
+        try:
+            report_text = analyzer.analyze_interview('data/transcripts.csv')
+            with open('data/report_phi.txt', 'w', encoding='utf-8') as f:
+                f.write(report_text)
+        except Exception as e:
+            print(f"[WARNING] LLM report failed: {e}")
+            
         return jsonify({'status': 'stopped'})
     except Exception as e:
         print(f"[ERROR] Error stopping audio: {e}")
