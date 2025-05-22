@@ -1,0 +1,8 @@
+Name: John Doe
+Date: 2025-05-21 18:56:30
+Professional Experience: Software Engineer
+Academic Background: Computer Science
+Interview Duration: 0 minutes and 42 seconds
+
+SUMMARY:
+John Doe has experience as Software Engineer and has educational background in Computer Science. Based on the interview, the candidate appears to be professional and could be a good fit for roles requiring these qualifications.
