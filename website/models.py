@@ -13,5 +13,6 @@ class User(db.Model, UserMixin):
 class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data = db.Column(db.String(1000))
+    #report_content = db.Column(db.Text)  # New column for report content
     date = db.Column(db.DateTime(timezone=True), default=db.func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
