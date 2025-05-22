@@ -167,7 +167,6 @@ class InterviewAnalyzer:
             "name": "Not mentioned",
             "professional_experience": "Not mentioned",
             "academic_background": "Not mentioned",
-            "skills": "Not mentioned"
         }
     
     def _extract_key_info_from_text(self, text_chunk: str, info_type: str) -> str:
@@ -176,7 +175,7 @@ class InterviewAnalyzer:
         
         Args:
             text_chunk: Text to analyze
-            info_type: Type of information to extract (name, experience, education, skills)
+            info_type: Type of information to extract (name, experience, education)
             
         Returns:
             Extracted information or "Not mentioned"
@@ -216,17 +215,6 @@ class InterviewAnalyzer:
                 if matches:
                     return matches[0].strip()
                     
-        elif info_type == "skills":
-            # Look for skill patterns
-            skill_patterns = [
-                r"skills? (?:include|in|with|:)\s+([^.]{3,70})",
-                r"(?:proficient|experienced|expertise|knowledge) (?:in|with|of)\s+([^.]{3,70})",
-                r"(?:I know|I've used|familiar with|worked with)\s+([^.]{3,70})"
-            ]
-            for pattern in skill_patterns:
-                matches = re.findall(pattern, text_chunk)
-                if matches:
-                    return matches[0].strip()
                     
         return "Not mentioned"
     
@@ -248,7 +236,6 @@ class InterviewAnalyzer:
                 "name": "Not mentioned",
                 "professional_experience": "Not mentioned",
                 "academic_background": "Not mentioned",
-                "skills": "Not mentioned"
             }
         
         # Start timing
@@ -264,7 +251,6 @@ class InterviewAnalyzer:
             "name": self._extract_key_info_from_text(all_text, "name"),
             "professional_experience": self._extract_key_info_from_text(all_text, "experience"),
             "academic_background": self._extract_key_info_from_text(all_text, "education"),
-            "skills": self._extract_key_info_from_text(all_text, "skills")
         }
         
         # Count how many fields were successfully extracted
@@ -290,9 +276,9 @@ class InterviewAnalyzer:
             processed_text = processed_text[:1000]
         
         # Create an ultra-focused prompt for speed
-        extraction_prompt = f"""Extract candidate info from interview transcript.
+        extraction_prompt = f"""Extract candidate info from interview transcript without invent anything of the information. If the information it is not in the transcript, use "Not mentioned.
 Transcript: {processed_text}
-Output JSON only with these keys: "name", "professional_experience", "academic_background", "skills"
+Output JSON only with these keys: "name", "professional_experience", "academic_background",
 For missing info use "Not mentioned".
 JSON:"""
         
@@ -302,7 +288,7 @@ JSON:"""
                 extraction_prompt,
                 max_new_tokens=150,  # Bare minimum tokens
                 do_sample=True,     # Deterministic 
-                temperature=0.1,
+                temperature=0.2,
                 top_k=5,
                 num_return_sequences=1
             )
@@ -339,7 +325,6 @@ JSON:"""
         name = candidate_info['name']
         experience = candidate_info['professional_experience']
         education = candidate_info['academic_background']
-        skills = candidate_info['skills']
         
         # Simple template-based summary
         if name == "Not mentioned":
@@ -357,12 +342,7 @@ JSON:"""
         else:
             edu_part = f"has educational background in {education}"
             
-        if skills == "Not mentioned":
-            skills_part = "demonstrated various professional skills during the interview"
-        else:
-            skills_part = f"possesses skills in {skills}"
-            
-        template = f"{name_part} {exp_part} and {edu_part}. The candidate {skills_part}. Based on the interview, the candidate appears to be professional and could be a good fit for roles requiring these qualifications."
+        template = f"{name_part} {exp_part} and {edu_part}. Based on the interview, the candidate appears to be professional and could be a good fit for roles requiring these qualifications."
         return template
         
     def generate_summary(self, transcript_df: pd.DataFrame, candidate_info: Dict[str, Any]) -> str:
@@ -403,11 +383,10 @@ JSON:"""
                 processed_text = all_text
                 
             # Ultra-simplified prompt
-            summary_prompt = f"""Write a professional HR summary of this candidate. 
+            summary_prompt = f"""Write a factual, professional HR summary (≈100 words) of this candidate. Do NOT invent information. If the information it is not in the transcript, use "Not mentioned" 
 Name: {candidate_info['name']}
 Experience: {candidate_info['professional_experience']}
 Education: {candidate_info['academic_background']}
-Skills: {candidate_info['skills']}
 Interview: {processed_text}
 Summary:"""
             
@@ -420,8 +399,8 @@ Summary:"""
                     outputs = self.generator(
                         summary_prompt,
                         max_new_tokens=150,  # Minimal tokens
-                        do_sample=True,
-                        temperature=0.7,
+                        do_sample=False,
+                        temperature=0.2,
                         top_p=0.95,
                         num_return_sequences=1
                     )
@@ -488,7 +467,6 @@ Summary:"""
 Date: {current_datetime}
 Professional Experience: {candidate_info['professional_experience']}
 Academic Background: {candidate_info['academic_background']}
-Skills: {candidate_info['skills']}
 Interview Duration: {duration_str}
 
 SUMMARY:
@@ -545,7 +523,6 @@ SUMMARY:
                         "name": "Not mentioned",
                         "professional_experience": "Not mentioned",
                         "academic_background": "Not mentioned",
-                        "skills": "Not mentioned"
                     }
                 
                 if 'summary' not in locals():
