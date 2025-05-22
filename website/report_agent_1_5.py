@@ -399,7 +399,7 @@ Summary:"""
                     outputs = self.generator(
                         summary_prompt,
                         max_new_tokens=150,  # Minimal tokens
-                        do_sample=False,
+                        do_sample=True,
                         temperature=0.2,
                         top_p=0.95,
                         num_return_sequences=1

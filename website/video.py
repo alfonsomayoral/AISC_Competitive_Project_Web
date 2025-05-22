@@ -84,27 +84,56 @@ def get_report():
     global emotion_log
     summary = dict(Counter(emotion_log))
     emotion_log.clear()
+    report_content = analyzer.analyze_interview("data/transcripts.csv")
+
+    with open("data/report_phi.txt", "w", encoding="utf-8") as fh:
+            fh.write(report_content)
 
     db.session.add(Report(
         data=json.dumps(summary),
-        user_id=current_user.id
+        user_id=current_user.id,
+        report_content = report_content
     ))
     db.session.commit()
     return jsonify(summary)
 
+@video.route('/get_latest_report')
+@login_required
+def get_latest_report():
+    """Get the most recent report for the current user."""
+    latest_report = Report.query.filter_by(user_id=current_user.id)\
+        .order_by(Report.date.desc()).first()
+    
+    if latest_report:
+        return jsonify({
+            'report_content': latest_report.report_content
+        })
+    return jsonify({'report_content': 'No report available'})
 
+"""
 def _run_llm_report() -> None:
-    """
-    Genera data/report_phi.txt sin bloquear la ruta /stop_stream.
-    """
     try:
         report = analyzer.analyze_interview("data/transcripts.csv")
+        
+        # Save to file
         with open("data/report_phi.txt", "w", encoding="utf-8") as fh:
             fh.write(report)
-        print("[INFO] LLM report saved to data/report_phi.txt")
+        
+        # Save to database
+        from .models import Report
+        from . import db
+        new_report = Report(
+            data=json.dumps(dict(Counter(emotion_log))),
+            report_content=report,
+            user_id=current_user.id
+        )
+        db.session.add(new_report)
+        db.session.commit()
+        
+        print("[INFO] LLM report saved to data/report_phi.txt and database")
     except Exception as e:
         print(f"[WARNING] LLM report failed: {e}")
-
+"""
 
 class Camera:
     """Threaded capture that always returns the freshest frame."""

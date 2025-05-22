@@ -20,6 +20,7 @@ def home():
         parsed_reports.append({
             "id": report.id,
             "data": emotion_data,
+            "report_content": report.report_content,  # Add this line
             "date": report.date.strftime("%B %d, %Y %H:%M")
         })
 
