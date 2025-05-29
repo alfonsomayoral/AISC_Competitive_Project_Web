@@ -1,8 +1,8 @@
-Name: John Doe
-Date: 2025-05-21 18:56:30
-Professional Experience: Software Engineer
+Name: Laurenga Guevro
+Date: 2025-05-27 15:59:16
+Professional Experience: programming languages like "Python
 Academic Background: Computer Science
-Interview Duration: 0 minutes and 42 seconds
+Interview Duration: 3 minutes and 16 seconds
 
 SUMMARY:
-John Doe has experience as Software Engineer and has educational background in Computer Science. Based on the interview, the candidate appears to be professional and could be a good fit for roles requiring these qualifications.
+Laurenga Guevro is a highly skilled programmer with a strong background in Python. She has extensive experience in the field and is known for her ability to write efficient and effective code. Her education in Computer Science has equipped her with the necessary skills to excel in her profession.

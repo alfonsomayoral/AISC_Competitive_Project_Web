@@ -1,0 +1,18 @@
+Name: Lauren Gallego
+Date: 2025-05-27
+Professional Experience: [{'company': 'Aitaca', 'job_title': 'Data Science Intern', 'duration': '3 months'}]
+Academic Background: {'university': 'University Carlos III of Madrid (exchange year at UC Riverside)', 'degree': 'B.Sc. in Data Science & Engineering (expected May 2026)'}
+Skills: ['machine learning', 'computer vision', 'Python', 'SQL', 'R', 'adaptability', 'teamwork', 'communication', 'problem-solving']
+Time: 4 minutes 30 seconds
+
+SUMMARY:
+Lauren Gallego is a final-year data-science student who brings hands-on experience from a computer-vision internship at Aitaca, where he helped build a model to predict
+ring size from hand images. Proficient in Python, SQL and R, he focuses academically on machine learning and AI. During the internship he demonstrated adaptability by 
+reorganising a project after a late 40 % scope change, keeping the delivery on schedule. Bilingual in English and Spanish and comfortable in multicultural teams, 
+Lauren combines solid technical skills with clear communication and a proactive, problem-solving attitude—making him a strong prospect for an entry-level data or ML role.
+
+
+
+
+
+
