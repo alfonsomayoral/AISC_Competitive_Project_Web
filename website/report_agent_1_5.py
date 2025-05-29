@@ -287,7 +287,7 @@ JSON:"""
             outputs = self.generator(
                 extraction_prompt,
                 max_new_tokens=150,  # Bare minimum tokens
-                do_sample=True,     # Deterministic 
+                do_sample=False,     # Deterministic 
                 temperature=0.2,
                 top_k=5,
                 num_return_sequences=1
@@ -351,27 +351,27 @@ JSON:"""
         1. Create a template-based summary for immediate use
         2. Run ML model in parallel to enhance the summary
         3. Use whichever completes first or falls back to template
-        
+    
         Args:
             transcript_df: DataFrame containing the transcript
             candidate_info: Dictionary containing extracted candidate information
-            
+        
         Returns:
             Summary of the candidate as a string
-        """
+    """
         if transcript_df.empty:
             logger.warning("Empty transcript, returning default summary")
             return "Unable to generate summary due to empty transcript data."
-        
+    
         logger.info("Generating candidate summary...")
         start_time = time.time()
-        
+    
         # 1. Immediately create a template-based summary (instant)
         template_summary = self._generate_summary_template(candidate_info)
-        
+    
         # Set a very strict time limit - we want the whole process to be fast
         time_limit = 20  # seconds
-        
+    
         # 2. Try to get an ML-generated summary with a strict time limit
         try:
             # Create a very minimal prompt to save tokens
@@ -381,63 +381,82 @@ JSON:"""
                 processed_text = all_text[:500] + "..." + all_text[-500:]
             else:
                 processed_text = all_text
-                
-            # Ultra-simplified prompt
-            summary_prompt = f"""Write a factual, professional HR summary (≈100 words) of this candidate. Do NOT invent information. If the information it is not in the transcript, use "Not mentioned" 
-Name: {candidate_info['name']}
-Experience: {candidate_info['professional_experience']}
-Education: {candidate_info['academic_background']}
-Interview: {processed_text}
-Summary:"""
             
+            # Enhanced prompt with clear instructions
+            summary_prompt = f"""Generate a professional HR summary (100-150 words) based on this interview. 
+            Focus only on the candidate's qualifications, experience, and responses. 
+            Do not add any examples, stories, or additional text.
+            Do not include any exercises or hypothetical scenarios.
+            Stop after completing one concise paragraph.
+
+            Candidate Information:
+            - Name: {candidate_info['name']}
+            - Experience: {candidate_info['professional_experience']}
+            - Education: {candidate_info['academic_background']}
+
+            Summary:
+            """
+        
             # Create a future for the model generation
             result_summary = [template_summary]  # Default to template
-            
+        
             def generate_with_timeout():
                 try:
-                    # Generate with minimal tokens and aggressive settings
+                    # Generate with minimal tokens and strict settings
                     outputs = self.generator(
                         summary_prompt,
-                        max_new_tokens=150,  # Minimal tokens
-                        do_sample=True,
-                        temperature=0.2,
-                        top_p=0.95,
-                        num_return_sequences=1
+                        max_new_tokens=200,  # Slightly more tokens for better completion
+                        do_sample=False,     # More focused generation
+                        temperature=0.2,     # Lower temperature for less randomness
+                        top_p=0.9,           # Limit to high probability tokens
+                        num_return_sequences=1,
+                        eos_token_id=self.tokenizer.eos_token_id,  # Add end of sequence token
+                        pad_token_id=self.tokenizer.eos_token_id   # Use EOS as pad token
                     )
-                    
-                    # Extract just the generated part
+                
+                    # Extract and clean the generated text
                     full_response = outputs[0]['generated_text']
                     ml_summary = full_response.replace(summary_prompt, "").strip()
-                    
-                    # Clean up common formatting issues
+                
+                    # Additional cleaning
                     ml_summary = re.sub(r'^Summary:', '', ml_summary, flags=re.IGNORECASE).strip()
-                    
+                
+                    # Remove any text after double newlines (potential start of new sections)
+                    ml_summary = ml_summary.split('\n\n')[0].strip()
+                
+                    # Remove any incomplete sentences at the end
+                    ml_summary = re.sub(r'[^.!?]+$', '', ml_summary)
+                
+                    # Ensure it ends with proper punctuation
+                    if not ml_summary.endswith(('.', '!', '?')):
+                        ml_summary = ml_summary.rstrip(' ,;:-') + '.'
+                
                     # Update the result if we got something valid
                     if len(ml_summary) > 50:
                         result_summary[0] = ml_summary
                 except Exception as e:
                     logger.warning(f"ML summary generation failed: {str(e)}")
-            
+        
             # Start the generation in a separate thread
             thread = threading.Thread(target=generate_with_timeout)
             thread.daemon = True  # Thread will die when main thread exits
             thread.start()
-            
+        
             # Wait up to the time limit
             thread.join(timeout=time_limit)
-            
+        
             # If still running after time limit, we'll use the template
             if thread.is_alive():
                 logger.warning(f"ML summary generation exceeded {time_limit}s timeout, using template")
                 # Will use template_summary from result_summary[0]
-            
+        
             final_summary = result_summary[0]
-            
+        
             process_time = time.time() - start_time
             logger.info(f"Generated summary in {process_time:.2f} seconds")
-            
+        
             return final_summary
-            
+        
         except Exception as e:
             logger.error(f"Error in summary generation: {str(e)}")
             process_time = time.time() - start_time

@@ -73,7 +73,7 @@ def stop_stream():
     except Exception as e:
         print(f"[ERROR] Audio stop failed: {e}")
 
-    threading.Thread(target=_run_llm_report, daemon=True).start()
+    # threading.Thread(target=_run_llm_report, daemon=True).start()
 
     return jsonify({"status": "stopped"})  
 
@@ -139,7 +139,9 @@ class Camera:
     """Threaded capture that always returns the freshest frame."""
     def __init__(self):
         self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)  # Increase buffer size
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
+        # self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         self.lock, self.frame, self.live = threading.Lock(), None, True
         threading.Thread(target=self._update, daemon=True).start()
 
