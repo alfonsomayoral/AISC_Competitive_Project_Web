@@ -1,4 +1,4 @@
-# IntelliView - AI Interview Assistant - AISC@Riv Competitive Project
+# IntelliView - AI Interview Assistant - AISC@RIV Competitive Project
 > Face & emotion detection · Whisper speech-to-text with timestamps · **Intelligent Report Agent** in ~20s · Privacy-friendly on-prem pipeline
 
 <p align="center">
