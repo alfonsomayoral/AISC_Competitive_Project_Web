@@ -1,7 +1,5 @@
-# IntelliView — AI Interview Assistant (AISC Competitive Project 2024–2025)
+# IntelliView - AI Interview Assistant - AISC@Riv Competitive Project
 > Face & emotion detection · Whisper speech-to-text with timestamps · **Intelligent Report Agent** in ~20s · Privacy-friendly on-prem pipeline
-
-![Project hero — replace with a real screenshot of the live demo](docs/img/hero-demo.png "Export from the slide 'MEET THE PRODUCT' and place it here")
 
 <p align="center">
   <a href="#"><img alt="Python" src="https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white"></a>
@@ -14,23 +12,23 @@
 ---
 
 ## 🧭 Table of Contents
-- [Contributors](#contributors)
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Architecture](#architecture)
-- [How It Works (Technical Deep Dive)](#how-it-works-technical-deep-dive)
-  - [1) Computer Vision](#1-computer-vision)
-  - [2) Speech-to-Text](#2-speechto-text)
-  - [3) Intelligent Report Agent (focus area)](#3-intelligent-report-agent-focus-area)
-- [Repository Structure](#repository-structure)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Performance & Cost](#performance--cost)
-- [Known Limitations](#known-limitations)
-- [Image Export Guide](#image-export-guide)
+- 👥 [Contributors](#contributors)
+- 📘 [Overview](#overview)
+- ✨ [Key Features](#key-features)
+- 🏗️ [Architecture](#architecture)
+- 🔬 [How It Works (Technical Deep Dive)](#how-it-works-technical-deep-dive)
+  - 👁️ [1) Computer Vision](#1-computer-vision)
+  - 🗣️ [2) Speech-to-Text](#2-speech-to-text)
+  - 🤖 [3) Intelligent Report Agent (focus area)](#3-intelligent-report-agent-focus-area)
+- 📂 [Repository Structure](#repository-structure)
+- 🛠️ [Installation](#installation)
+- ⚡ [Quick Start](#quick-start)
+- ⏱️ [Performance & Cost](#performance--cost)
+- ⚠️ [Known Limitations](#known-limitations)
 
 ---
 ## Contributors
+![Team](img/team.png)
 
 ## Overview
 **IntelliView** is a real-time assistant for video interviews. During a call (or a local recording), the system:
@@ -39,17 +37,19 @@
 3. **transcribes** audio with **Whisper** (timestamped tokens), and  
 4. produces a **concise, recruiter-friendly report** using a low-latency **LLM agent**.
 
-This tool targets both **employers** (consistent, auditable interview logs) and **candidates** (guided practice with objective feedback). The “product view” and target audiences are laid out in the project presentation. :contentReference[oaicite:0]{index=0}
+This tool targets both **employers** (consistent, auditable interview logs) and **candidates** (guided practice with objective feedback). The “product view” and target audiences are laid out in the project presentation.
+
+![Project Hero](img/hero-demo.png)
 
 ---
 
 ## Key Features
-- **Real-time perception** and end-to-end **~20s** report latency with on-device inference (quantized LLM + regex-first extraction). :contentReference[oaicite:1]{index=1}
-- **Face detection** and **emotion classification** with a **two-model YOLO** setup after iterating away from a single multitask model that suffered catastrophic forgetting. :contentReference[oaicite:2]{index=2}
-- **Speech-to-text** via **Whisper-small**, streaming **20 ms** token timestamps for precise A/V alignment. :contentReference[oaicite:3]{index=3}
-- **Report agent** with deterministic fallback, strict timeout (20s), and 100–150-word summaries. :contentReference[oaicite:4]{index=4}
-- **Privacy**: full **on-prem** capability (no external audio upload required). :contentReference[oaicite:5]{index=5}
-- **Web app** flow (login → dashboard of reports → record → auto-report). :contentReference[oaicite:6]{index=6}
+- **Real-time perception** and end-to-end **~20s** report latency with on-device inference (quantized LLM + regex-first extraction).
+- **Face detection** and **emotion classification** with a **two-model YOLO** setup after iterating away from a single multitask model that suffered catastrophic forgetting.
+- **Speech-to-text** via **Whisper-small**, streaming **20 ms** token timestamps for precise A/V alignment.
+- **Report agent** with deterministic fallback, strict timeout (20s), and 100–150-word summaries.
+- **Privacy**: full **on-prem** capability (no external audio upload required).
+- **Web app** flow (login → dashboard of reports → record → auto-report).
 
 ---
 
@@ -57,37 +57,31 @@ This tool targets both **employers** (consistent, auditable interview logs) and 
 
 
 ## How It Works (Technical Deep Dive)
-1) Computer Vision
+### 1) Computer Vision
   - Face detection (YOLO): lightweight model tuned for FPS on laptop-class GPUs/CPUs.
   - Emotion classification (YOLO): a separate fine-tuned model for expressions.
   - Iteration: early single-model approach (multi-dataset Kaggle + AffectNet) degraded due to catastrophic forgetting, so the system split into two heads/two models (“Final YOLO System”). 
 
-Suggested image: export the slide panels “First Iteration” and “Final YOLO System” to docs/img/yolo-iterations.png. 
+![YOLO Iterations](img/yolo-iterations.png)
 
-2) Speech-to-Text
+### 2) Speech-to-Text
   - VAD (WebRTC) segments audio (≈30 ms frames) and filters silence/noise.
   - Frames → log-Mel spectrogram → Whisper-small (encoder–decoder Transformer).
   - Output: text tokens with ~20 ms timestamps, enabling direct alignment with video and emotion streams and CSV logging for the downstream agent. 
 
-Suggested image: export the “WHISPER — Official paper / Real-time Speech to Text” graphic to docs/img/whisper-overview.png. 
+![Whisper Overview](img/whisper.png)
 
-3) Intelligent Report Agent (focus area)
+### 3) Intelligent Report Agent (focus area)
   - Owner: Alfonso Mayoral — design, optimization, and deployment of the reporting agent.
   - Goal: transform the transcript (and auxiliary signals) into a 100–150-word summary + key candidate fields in ≤ 20 s.  
   - Pipeline (7 steps):
-    - Import transcript CSV and compute duration.
-    - Clean & timestamp rows; drop malformed lines.
-    - Extract candidate info with fast regex/keywords; if fields are missing, a micro-prompt fills gaps.
-    - Draft deterministic template as instant fallback.
-    - LLM refines summary in a separate thread with a hard 20s timeout and 100–150 words cap.
-    - Assemble final report with candidate fields + summary + duration.
-    - Export to TXT / Markdown / HTML and push to the web app. 
+    IMAGEN DENTRO DE img/pipeline-report-agent.png
   - Model evolution & trade-offs:
     - Phase 1 — Big models: GPT-4 Turbo, Mistral-7B, Llama-3-8B → excellent narrative, 2-hour transcripts OK, but ~10 min/report and cloud cost/privacy concerns.
     - Phase 2 — Mid/Tiny OSS: BART-SAMSum, Llama-2-7B, Phi-3-mini, Gemma-2B → on-prem GPU cut cost by ≈ 75%, but external search added latency (≈ 7 min total), prompts brittle on very long transcripts.
     - Phase 3 — Search-augmented Phi-1.5 (current): in-process keyword search + regex-first and 4/8-bit quantization → ~20 s end-to-end on a laptop GPU (~4 GB); factual tone; limit ≤ 150 words. 
 
-Suggested image: export the slide “Evolution of agent development (1st / 2nd / Final)” to docs/img/agent-evolution.png. 
+![Model Comparisons](img/models.png)
 
 ## Repository Structure
 ```bash
@@ -101,7 +95,7 @@ AISC_Competitive_Project_Web/
 ├─ requirements.txt       # Python dependencies
 └─ README.md              # This file
 ```
-Suggested image: export a simplified architecture from the slide “Website architecture (Step 1–3)” to docs/img/website-architecture.png. 
+![Website](img/website-architecture.png)
 
 ## Installation
 - Prerequisites
